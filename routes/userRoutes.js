@@ -5,6 +5,7 @@ const secure = require("../utils/Secure");
 
 //Signup user
 router.post("/signup", async (req, res) => {
+    console.log(req.body);
     const {nom, post_nom, prenom, sexe, grade, password, email, role } = req.body;
     if (!nom || !post_nom || !prenom || !sexe || !grade || !password || !email || !role) {
         return res.status(400).send("Missing required fields");
@@ -12,10 +13,12 @@ router.post("/signup", async (req, res) => {
 
     const hashPassword = secure.hashPassword(password);
     const user = new User({nom, post_nom, prenom, sexe, grade, password: hashPassword, email, role });
+    console.log("user", user);
     try {
         await user.save();
         res.status(201).send(user);
     } catch (error) {
+        console.log(error);
         res.status(400).send(error);
     }
 });
@@ -23,7 +26,9 @@ router.post("/signup", async (req, res) => {
 //Login user
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
+    console.log(email, password);
     const user = await User.findOne({ email });
+    console.log(user);
     if (!user) {
         return res.status(400).send("User not found");
     }

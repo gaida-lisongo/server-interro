@@ -4,7 +4,10 @@ const CoursSchema = new mongoose.Schema({
     designation: String,
     unite: String,
     credit: Number,
-    enseignant: String,
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
     semestre: String,
     annee: String
 })

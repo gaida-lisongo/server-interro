@@ -1,9 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const Groupe = require("../models/Groupe");
+const Cours = require("../models/Cours");
+const secure = require("../utils/Secure");
+
+//Middleware
+const userAuth = (req, res, next) => {
+    const token = req.headers.authorization.split(" ")[1];
+    const user = secure.verifyToken(token);
+    if (!user) {
+        return res.status(401).send("Unauthorized");
+    }
+    req.user = user;
+    next();
+}
 
 //Create a new groupe
-router.post("/", async (req, res) => {
+router.post("/", userAuth, async (req, res) => {
     const groupe = new Groupe(req.body);
     try {
         await groupe.save();
@@ -14,10 +27,31 @@ router.post("/", async (req, res) => {
 });
 
 //Get all groupes
-router.get("/", async (req, res) => {
+router.get("/", userAuth, async (req, res) => {
     try {
-        const groupes = await Groupe.find();
-        res.status(200).send(groupes);
+        const groupes = await Groupe.find().populate("serieId").lean();
+        if (!groupes) {
+            return res.status(404).send("Groupes not found");
+        }
+        
+        let groupesData = [];
+        let coursData = [];
+        Promise.all(groupes.map(async (groupe) => {
+            if (groupe.userId.toString() === req.user.id) {
+                groupesData.push(groupe);
+            }
+
+            const serie = groupe.serieId;
+            const cours = await Cours.findById(serie.coursId);
+            
+            if (cours) {
+                const isExist = coursData.find((c) => c._id.toString() === cours._id.toString());
+                if (!isExist) {
+                    coursData.push(cours);
+                }
+            }
+        }));
+        res.status(200).send({groupes: groupesData, cours: coursData});
     } catch (error) {
         res.status(400).send(error);
     }
