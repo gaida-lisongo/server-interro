@@ -30,7 +30,10 @@ router.post("/login", async (req, res) => {
     if (user.password !== secure.hashPassword(password)) {
         return res.status(400).send("Invalid password");
     }
-    res.status(200).send(user);
+    res.status(200).send({
+        token: secure.generateToken(user),
+        user
+    });
 });
 
 //Update user
