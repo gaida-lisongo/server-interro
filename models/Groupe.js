@@ -16,7 +16,7 @@ const GroupeSchema = new mongoose.Schema({
         ref: "User"
     },
     designation: String,
-    statut: {type: String, enum: ["ON", "PENDING", "OK"], default: "PENDING"}
+    statut: {type: String, enum: ["NO", "PENDING", "OK"], default: "PENDING"}
 });
 
 module.exports = mongoose.model("Groupe", GroupeSchema);

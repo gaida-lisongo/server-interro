@@ -6,13 +6,30 @@ const secure = require("../utils/Secure");
 
 //Middleware
 const userAuth = (req, res, next) => {
-    const token = req.headers.authorization.split(" ")[1];
-    const user = secure.verifyToken(token);
-    if (!user) {
-        return res.status(401).send("Unauthorized");
+    try {
+        // Check if authorization header exists
+        if (!req.headers.authorization) {
+            return res.status(401).send("Authorization header missing");
+        }
+        
+        // Check if authorization header has the correct format (Bearer token)
+        const authParts = req.headers.authorization.split(" ");
+        if (authParts.length !== 2 || authParts[0] !== "Bearer") {
+            return res.status(401).send("Invalid authorization format. Use: Bearer <token>");
+        }
+        
+        const token = authParts[1];
+        const user = secure.verifyToken(token);
+        if (!user) {
+            return res.status(401).send("Invalid or expired token");
+        }
+        
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error("Auth middleware error:", error);
+        return res.status(401).send("Authentication failed");
     }
-    req.user = user;
-    next();
 }
 
 //Create a new groupe
@@ -26,24 +43,38 @@ router.post("/", userAuth, async (req, res) => {
     }
 });
 
-//Get all groupes
-router.get("/", userAuth, async (req, res) => {
+//Get all groupes by user
+router.get("/serie/:id", async (req, res) => {
     try {
-        const groupes = await Groupe.find().populate("serieId").lean();
+        console.log(req.params.id);
+        const groupes = await Groupe.find({ serieId: req.params.id }).populate("etudiantIds").populate("serieId").populate("userId").lean();
+        if (!groupes) {
+            return res.status(404).send("Groupes not found");
+        }
+        res.status(200).send(groupes);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+//Get all groupes
+router.get("/all", userAuth, async (req, res) => {
+    try {
+        const groupes = await Groupe.find().populate("serieId").populate("etudiantIds").populate("userId").lean();
         if (!groupes) {
             return res.status(404).send("Groupes not found");
         }
         
         let groupesData = [];
         let coursData = [];
-        Promise.all(groupes.map(async (groupe) => {
+        await Promise.all(groupes.map(async (groupe) => {
             if (groupe.userId.toString() === req.user.id) {
                 groupesData.push(groupe);
             }
 
             const serie = groupe.serieId;
             const cours = await Cours.findById(serie.coursId);
-            
+
             if (cours) {
                 const isExist = coursData.find((c) => c._id.toString() === cours._id.toString());
                 if (!isExist) {

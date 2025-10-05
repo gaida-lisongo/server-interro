@@ -16,7 +16,7 @@ router.post("/", async (req, res) => {
 //Get all series
 router.get("/", async (req, res) => {
     try {
-        const series = await Serie.find();
+        const series = await Serie.find().populate("coursId");
         res.status(200).send(series);
     } catch (error) {
         res.status(400).send(error);
