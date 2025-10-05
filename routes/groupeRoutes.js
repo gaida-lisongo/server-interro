@@ -88,6 +88,24 @@ router.get("/all", userAuth, async (req, res) => {
     }
 });
 
+//Get detail groupe
+router.get("/:id", async (req, res) => {
+    try {
+        const groupe = await Groupe.findById(req.params.id).populate("serieId").populate("userId").lean();
+        if (!groupe) {
+            return res.status(404).send("Groupe not found");
+        }
+
+        if(groupe.statut == "NO") {
+            return res.status(404).send("Groupe not found");
+        }
+        
+        res.status(200).send(groupe);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
 //Update a groupe
 router.put("/:id", async (req, res) => {
     try {
