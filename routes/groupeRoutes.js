@@ -118,7 +118,8 @@ router.get("/:id", async (req, res) => {
             statut: groupe.statut,
             cours: cours,
             questions: questionsData,
-            userId: groupe.userId
+            titulaire: groupe.userId,
+            serieId: groupe.serieId._id            
         }
         res.status(200).send(groupeFormated);
     } catch (error) {
