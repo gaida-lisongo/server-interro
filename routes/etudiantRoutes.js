@@ -23,6 +23,19 @@ router.get("/", async (req, res) => {
     }
 });
 
+//Get detail etudiant
+router.get("/:id", async (req, res) => {
+    try {
+        const etudiant = await Etudiant.findById(req.params.id);
+        if (!etudiant) {
+            return res.status(404).send("Etudiant not found");
+        }
+        res.status(200).send(etudiant);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
 //Update a etudiant
 router.put("/:id", async (req, res) => {
     try {
