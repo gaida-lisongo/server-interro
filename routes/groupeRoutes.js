@@ -33,7 +33,7 @@ const userAuth = (req, res, next) => {
 }
 
 //Create a new groupe
-router.post("/", userAuth, async (req, res) => {
+router.post("/", async (req, res) => {
     const groupe = new Groupe(req.body);
     try {
         await groupe.save();
