@@ -38,9 +38,27 @@ router.get("/cours/:id", async (req, res) => {
 //Update a serie
 router.put("/:id", async (req, res) => {
     try {
-        const serie = await Serie.findByIdAndUpdate(req.params.id, req.body);
+        console.log(req.params.id);
+        console.log("Updating serie :", req.body);
+        
+        // Clean up questions data - remove empty _id fields
+        if (req.body.questions) {
+            req.body.questions = req.body.questions.map(question => {
+                // If _id is empty string or null, remove it to let Mongoose generate a new one
+                if (question._id === '' || question._id === null || question._id === undefined) {
+                    const { _id, ...questionWithoutId } = question;
+                    return questionWithoutId;
+                }
+                return question;
+            });
+        }
+        
+        const serie = await Serie.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        
+        console.log("serie updated :", serie);
         res.status(200).send(serie);
     } catch (error) {
+        console.log(error);
         res.status(400).send(error);
     }
 });
