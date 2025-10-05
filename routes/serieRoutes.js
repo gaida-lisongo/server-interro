@@ -23,6 +23,18 @@ router.get("/", async (req, res) => {
     }
 });
 
+//Get all series by cours
+router.get("/cours/:id", async (req, res) => {
+    try {
+        console.log(req.params.id);
+        const series = await Serie.find({ coursId: req.params.id }).populate("coursId");
+        console.log("series :", series);
+        res.status(200).send(series);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
 //Update a serie
 router.put("/:id", async (req, res) => {
     try {
