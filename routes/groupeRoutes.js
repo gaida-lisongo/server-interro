@@ -99,8 +99,28 @@ router.get("/:id", async (req, res) => {
         if(groupe.statut == "NO") {
             return res.status(404).send("Groupe not found");
         }
+
+        let questionsData = [];
+        const cours = await Cours.findById(groupe.serieId.coursId);
+        const serie = groupe.serieId;
+        serie.questions.forEach((question) => {
+            questionsData.push({
+                _id: question._id,
+                enonce: question.enonce,
+                assertions: question.assertions,
+                pts: question.pts
+            });
+        });
         
-        res.status(200).send(groupe);
+        const groupeFormated = {
+            _id: groupe._id,
+            designation: groupe.designation,
+            statut: groupe.statut,
+            cours: cours,
+            questions: questionsData,
+            userId: groupe.userId
+        }
+        res.status(200).send(groupeFormated);
     } catch (error) {
         res.status(400).send(error);
     }
