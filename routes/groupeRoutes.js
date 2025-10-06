@@ -68,11 +68,19 @@ router.get("/all", userAuth, async (req, res) => {
         let groupesData = [];
         let coursData = [];
         await Promise.all(groupes.map(async (groupe) => {
-            if (groupe.userId.toString() === req.user.id) {
+
+            // if (groupe.userId.toString() === req.user.id) {
+            //     groupesData.push(groupe);
+            // }
+
+            if(groupe.serieId){
                 groupesData.push(groupe);
             }
+            
 
             const serie = groupe.serieId;
+            if(!serie) return;
+
             const cours = await Cours.findById(serie.coursId);
 
             if (cours) {
@@ -82,8 +90,10 @@ router.get("/all", userAuth, async (req, res) => {
                 }
             }
         }));
+        console.log("Data courses : ", coursData)
         res.status(200).send({groupes: groupesData, cours: coursData});
     } catch (error) {
+        console.error("Error when fetching data = ", error)
         res.status(400).send(error);
     }
 });

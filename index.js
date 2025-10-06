@@ -6,6 +6,7 @@ const socketIo = require('socket.io');
 const Resolution = require('./models/Resolution');
 const Groupe = require('./models/Groupe');
 const Etudiant = require('./models/Etudiant');
+const Cours = require('./models/Cours');
 
 const students = [];
 
@@ -17,7 +18,7 @@ const io = socketIo(server, {
         methods: ["GET", "POST"]
     }
 });
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4001;
 
 const corsOptions = {
     origin: '*',
@@ -44,26 +45,36 @@ io.on('connection', (socket) => {
     socket.on('connectToGroup', async (data) => {
         try {
             const {
-                groupId,
+                groupeId,
                 etudiantId
             } = data;
             
             const etudiant = await Etudiant.findById(etudiantId).lean();
-            const groupe = await Groupe.findById(groupId).populate('serieId');
+            const groupe = await Groupe.findById(groupeId).populate('serieId');
             
             if (etudiant && groupe){
+                const coursData = await Cours.findById(groupe.serieId?.coursId).lean();
                 const existingEtudiant = students.find((student) => student._id.toString() === etudiant._id.toString());
                 if (existingEtudiant){
                     socket.emit('error', 'You are already connected to a group');
                     return;
                 }
+
+                const resolution = await Resolution.findOne({
+                    etudiantId,
+                    serieId: groupe.serieId
+                }).lean()
                 const etudiantData = {
                     ...etudiant,
-                    groupeId: groupe._id,
-                    serieId: groupe.serieId
+                    cours: coursData,
+                    groupe: groupe,
+                    reponses: resolution ? resolution.reponses : []
                 }
                 students.push(etudiantData);
                 socket.emit('connectToGroup', etudiantData);
+                // console.log("Data students :", students);
+
+                socket.emit('allStudents', students);
             } else {
                 socket.emit('error', 'Student or group not found');
             }
@@ -74,6 +85,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('allStudents', () => {
+
         socket.emit('allStudents', students);
     });
 
