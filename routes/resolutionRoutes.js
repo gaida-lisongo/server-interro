@@ -88,9 +88,35 @@ router.get("/", async (req, res) => {
 router.get('/etudiant/:id', async (req, res) => {
     try {
         const resolutions = await Resolution.find({ etudiantId: req.params.id });
-        res.status(200).send(resolutions);
+        res.status(200).send({
+            status: "success",
+            message: "Resolutions found",
+            data: resolutions
+        });
     } catch (error) {
-        res.status(400).send(error);
+        res.status(400).send({
+            status: "error",
+            message: error.message
+        });
+    }
+});
+
+//Get resolution by etudiantId and serieId
+router.get('/serie/:serieId', async (req, res) => {
+    try {
+        const resolution = await Resolution.find({ serieId: req.params.serieId }).populate("etudiantId").populate("serieId").lean();
+        console.log("Data resoluton : ", resolution);
+
+        res.status(200).send({
+            status: "success",
+            message: "Resolutions found",
+            data:[...resolution],
+        });
+    } catch (error) {
+        res.status(400).send({
+            status: "error",
+            message: error.message
+        });
     }
 });
 
